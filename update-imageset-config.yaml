@@ -1,0 +1,24 @@
+apiVersion: tmp-redhatgov.com/v1alpha1
+kind: ImageSetConfiguration
+storageConfig:
+  registry:
+    imageURL: localhost:5010/demo/metadata
+    skipTLS: true
+mirror:
+  ocp:
+    channels:
+      - name: stable-4.9
+    graph: true
+  operators:
+    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.9
+      headsonly: true
+  additionalimages:
+    - name: registry.redhat.io/ubi8/ubi:latest
+    - name: quay.io/podman/stable:latest
+  helm:
+    repos: 
+      - name: redhat-cop
+        url: https://redhat-cop.github.io/helm-charts
+        charts: 
+          - name: ploigos
+            version: 0.0.0

@@ -2,23 +2,23 @@ apiVersion: tmp-redhatgov.com/v1alpha1
 kind: ImageSetConfiguration
 storageConfig:
   registry:
-    imageURL: localhost:5010/demo/metadata
+    imageURL: localhost:5010/demo/metadata:oc-mirror
     skipTLS: true
 mirror:
   ocp:
     channels:
       - name: stable-4.9
     graph: true
-  operators:
-    - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.9
-      headsonly: true
+  #operators:
+  #  - catalog: registry.redhat.io/redhat/redhat-operator-index:v4.9
+  #    headsonly: true
   additionalimages:
     - name: registry.redhat.io/ubi8/ubi:latest
     - name: quay.io/podman/stable:latest
   helm:
     repos: 
-      - name: redhat-cop
-        url: https://redhat-cop.github.io/helm-charts
+      - name: podinfo
+        url: https://stefanprodan.github.io/podinfo
         charts: 
-          - name: ploigos
-            version: 0.0.0
+          - name: podinfo
+            version: 5.0.0

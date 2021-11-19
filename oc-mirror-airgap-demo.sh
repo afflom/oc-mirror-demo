@@ -1,40 +1,5 @@
 #!/usr/bin/env bash
 
-########################
-# Demo prep
-########################
-if ! which go &>/dev/null
-then
-  printf "Golang binary not found.\nThis demo needs go to setup the environment"
-  exit 1 
-fi
-if ! which podman &>/dev/null
-then
-  printf "Podman binary not found.\nThis demo needs podman to setup the environment"
-  exit 1 
-fi
-if ! which git &>/dev/null
-then
-  printf "Git not found.\nThis demo needs git to setup the environment"
-  exit 1 
-fi
-mkdir -p ./bin
-PATH=$PATH:$PWD/bin
-git clone https://github.com/openshift/oc-mirror.git && \
-cd oc-mirror
-./hack/build.sh &>/dev/null || exit 1; echo "oc-mirror build failed"
-cd -
-mv ./oc-mirror/bin/oc-mirror ./bin/
-
-
-GOBIN=$PWD/bin go install github.com/google/go-containerregistry/cmd/registry@latest
-
-registry -port 5010 &
-PID_5001=$!
-registry -port 5011 &
-PID_5002=$!
-
-
 
 ########################
 # include the magic
@@ -83,29 +48,29 @@ p "1. Discover content with oc-mirror\n"
 p "Find the available catalogs for the target version:\n"
 DEMO_PROMPT="$ "
 PROMPT_TIMEOUT=2
-#pei "oc-mirror list operators --catalogs --version=4.9\n"
-#wait
+pei "oc-mirror list operators --catalogs --version=4.9"
+wait
 DEMO_PROMPT=""
 PROMPT_TIMEOUT=3
 p "Find the available packages within the selected catalog:\n"
 DEMO_PROMPT="$ "
 PROMPT_TIMEOUT=2
-#pei "oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.9\n"
-#wait
+pei "oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.9"
+wait
 DEMO_PROMPT=""
 PROMPT_TIMEOUT=3
 p "Find channels for the selected package:\n"
 DEMO_PROMPT="$ "
 PROMPT_TIMEOUT=2
-#pei "oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.9 --package=nfd\n"
-#wait
+pei "oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.9 --package=nfd"
+wait
 DEMO_PROMPT=""
 PROMPT_TIMEOUT=3
 p "Find package versions within the selected channel:\n"
 DEMO_PROMPT="$ "
 PROMPT_TIMEOUT=2
-#pei ".oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.9 --package=nfd --channel=stable\n"
-#wait
+pei "oc-mirror list operators --catalog=registry.redhat.io/redhat/redhat-operator-index:v4.9 --package=nfd --channel=stable"
+wait
 
 # Release discovery
 DEMO_PROMPT=""
@@ -113,7 +78,7 @@ PROMPT_TIMEOUT=3
 p "Find OCP releases by major/minor version:\n"
 DEMO_PROMPT="$ "
 PROMPT_TIMEOUT=2
-pei "oc-mirror list releases --version=4.9 \n"
+pei "oc-mirror list releases --version=4.9"
 DEMO_PROMPT=""
 PROMPT_TIMEOUT=3
 p "\n"
@@ -146,7 +111,7 @@ p ""
 p "Create the imageset"
 DEMO_PROMPT="$ "
 PROMPT_TIMEOUT=2
-#pei "oc-mirror --config imageset-config.yaml file://output-dir --skip-missing \n"
+pei "oc-mirror --config imageset-config.yaml file://output-dir"
 
 # Transfer the imageset to the target env
 PROMPT_TIMEOUT=3
@@ -160,7 +125,7 @@ p "3. Publish an imageset\n"
 p "Publish the imageset to the disconnected registry:\n"
 DEMO_PROMPT="$ "
 PROMPT_TIMEOUT=2
-#pei "oc-mirror --from ./output-dir/mirror_seq1_000000.tar docker://localhost:5002\n"
+pei "oc-mirror --from ./output-dir/mirror_seq1_000000.tar docker://localhost:5011 --dest-skip-tls"
 DEMO_PROMPT=""
 PROMPT_TIMEOUT=2
 p "\n"
@@ -175,8 +140,12 @@ DEMO_PROMPT="$ "
 PROMPT_TIMEOUT=2
 pei "cat update-imageset-config.yaml"
 DEMO_PROMPT=""
-PROMPT_TIMEOUT=2
+PROMPT_TIMEOUT=3
 p "\n"
+p "Create the update imageset:"
+DEMO_PROMPT="$ "
+PROMPT_TIMEOUT=2
+pei "oc-mirror --config update-imageset-config.yaml file://output-dir"
 DEMO_PROMPT=""
 PROMPT_TIMEOUT=3
 p "Transfer the imageset to the disconnected environment."
@@ -188,16 +157,15 @@ p "5. Publish an update imageset\n"
 p "Publish the imageset to the disconnected registry:\n"
 DEMO_PROMPT="$ "
 PROMPT_TIMEOUT=2
-#pei "oc-mirror --from ./output-dir/mirror_seq2_000000.tar docker://localhost:5002\n"
+pei "oc-mirror --from ./output-dir/mirror_seq2_000000.tar docker://localhost:5011 --dest-skip-tls"
+
+DEMO_PROMPT=""
+PROMPT_TIMEOUT=3
 p "\n"
+p "That concludes this demo"
 
 
 # show a prompt so as not to reveal our true nature after
 # the demo has concluded
 p ""
 
-
-# Cleanup workspace
-kill $PID_5001
-kill $PID_5002
-rm -Rf ./bin ./output-dir ./oc-mirror-workspace ./oc-mirror
